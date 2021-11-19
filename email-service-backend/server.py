@@ -1,5 +1,6 @@
 import asyncio
 
+import quotequail
 import requests
 from aiohttp import web
 from imap_tools import *
@@ -27,7 +28,8 @@ imap_client = None
 
 async def periodic(timeout, stuff):
     await stuff()
-    while True:
+
+    while False:
         await asyncio.sleep(timeout)
         await stuff()
 
@@ -37,7 +39,9 @@ async def check_mailbox():
 
     imap_client = MailBox('imap.gmail.com')
     imap_client.login(EMAIL, PASSWORD, initial_folder='INBOX')
-    subjects = [msg for msg in imap_client.fetch(AND(all=True, seen=False), mark_seen=False)]
+    subjects = [msg.html for msg in imap_client.fetch(AND(all=True, seen=False), mark_seen=False)]
+
+    subjects = list(map(lambda x: (quotequail.unwrap_html(x) or {}).get("html_top") or x, subjects))
     print("fetched" + str(subjects))
     imap_client.logout()
 
