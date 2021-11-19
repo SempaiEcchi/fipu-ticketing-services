@@ -1,7 +1,9 @@
 import asyncio
 
+import requests
 from aiohttp import web
 from imap_tools import *
+from email_data import *
 
 from env import *
 
@@ -35,9 +37,30 @@ async def check_mailbox():
 
     imap_client = MailBox('imap.gmail.com')
     imap_client.login(EMAIL, PASSWORD, initial_folder='INBOX')
-    subjects = [msg.html for msg in imap_client.fetch(AND(all=True, seen=False), mark_seen=False)]
+    subjects = [msg for msg in imap_client.fetch(AND(all=True, seen=False), mark_seen=False)]
     print("fetched" + str(subjects))
     imap_client.logout()
+
+
+async def create_instance() -> str:
+    response = requests.post(
+        bpmn_url + "model/ticketing.bpmn/instance",
+        timeout=5,
+    )
+    id = dict(response.json()).get("id")
+    print(id)
+    return id
+
+
+async def call_receive_mail_task(instance_id: str, email_data: EmailData):
+    data = email_data.__dict__
+    response = requests.post(
+        bpmn_url + f"instance/{instance_id}/task/primi_mail/receive",
+        timeout=5,
+        json=data
+
+    )
+    print("sent")
 
 
 async def mail_listener(app):
@@ -71,4 +94,4 @@ async def serve():
 
 if __name__ == "__main__":
     app = run()
-    web.run_app(app, port=8081)
+    web.run_app(app, port=8087)
