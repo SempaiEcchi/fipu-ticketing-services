@@ -1,5 +1,6 @@
 import asyncio
 
+import aiohttp_cors
 import quotequail
 import requests
 from aiohttp import web
@@ -88,7 +89,20 @@ def run():
     app.on_startup.append(mail_listener)
     app.on_shutdown.append(close_imap)
     app.add_routes(routes)
+    cors = aiohttp_cors.setup(
+        app,
+        defaults={
+            "*": aiohttp_cors.ResourceOptions(
+                allow_credentials=True,
+                expose_headers="*",
+                allow_headers="*",
+                allow_methods="*",
+            )
+        },
+    )
 
+    for route in list(app.router.routes()):
+        cors.add(route)
     return app
 
 
@@ -98,4 +112,4 @@ async def serve():
 
 if __name__ == "__main__":
     app = run()
-    web.run_app(app, port=8087)
+    web.run_app(app, port=8089)
