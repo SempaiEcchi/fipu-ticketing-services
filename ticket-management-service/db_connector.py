@@ -5,7 +5,9 @@ import os
 
 DB = Database()
 
+
 class CloseEvent(DB.Entity):
+    _table_ = "close_event"
     instance_id = PrimaryKey(str)
     close_timestamp = Required(datetime, precision=6)
 

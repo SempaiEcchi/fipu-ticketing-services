@@ -1,7 +1,11 @@
+import asyncio
+import datetime
 import json
+import uuid
 
 import aiohttp_cors
 from aiohttp import web
+import db_connector
 
 routes = web.RouteTableDef()
 
@@ -27,6 +31,17 @@ async def reset_close_date(request):
     return web.json_response({"status": "OK", "closed": True})
 
 
+@routes.get("/test")
+async def test(request):
+    db_connector.add_event(instance_id=str(uuid.uuid4()),
+                           close_timestamp=datetime.datetime.now() + datetime.timedelta(days=7))
+    return web.json_response({"status": "OK", "closed": True})
+
+
+async def setup_app(app):
+    db_connector.setup_db()
+
+
 app = None
 
 
@@ -34,6 +49,7 @@ def run():
     global app
 
     app = web.Application()
+    app.on_startup.append(setup_app)
     cors = aiohttp_cors.setup(
         app,
         defaults={
